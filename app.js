@@ -1,17 +1,10 @@
 var http = require('http');
 var parseUrl = require('url').parse;
-
-function homeController(req, res){
-	res.end('home\n');
-}
-
-function userController(req, res){
-	res.end('user\n');
-}
+var controllers = require('./controllers');
 
 function notFountController(req, res){
 	res.writeHead(404);
-	res.end('404\n');
+	res.end('Not Found\n');
 }
 
 function find(arr, match){
@@ -25,11 +18,15 @@ function find(arr, match){
 const rules = [
 	{
 		path : '/', 
-		controller : homeController
+		controller : controllers.home
 	},
 	{
 		path : '/user', 
-		controller : userController
+		controller : controllers.user
+	},
+	{
+		path : /^\/static(\/.*)/,
+		controller : controllers.static
 	}
 ];
 
@@ -38,6 +35,10 @@ var server = http.createServer(function(req, res){
 	console.log('url:', req.url, 'urlInfo：', urlInfo);
 
 	var rule = find(rules, function(rule){
+		if(rule.path instanceof RegExp){
+			console.log(rule.path);
+			return urlInfo.pathname.match(rule.path);
+		}
 		return rule.path == urlInfo.pathname;
 	});
 	var controller = rule && rule.controller || notFountController
